@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -16,6 +17,8 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RunnableFuture;
 
@@ -35,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        RiotAPI.KEY = getString(R.string.riot_api_key);
         info[0] = (TextView) findViewById(R.id.name);
         info[1] = (TextView) findViewById(R.id.phone);
         info[2] = (TextView) findViewById(R.id.e_mail);
@@ -45,32 +50,20 @@ public class MainActivity extends AppCompatActivity {
         getButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final CountDownLatch latch = new CountDownLatch(5);
+                Pair<String, SummonerDto> result = RiotAPI.getSummonerByName("NA", "ajmgallop");
+                if (result != null) {
+                    StringBuilder builder = new StringBuilder();
+                    info[0].setText(result.second.id + "");
+                    info[1].setText(result.second.name);
+                    info[2].setText(result.second.profileIconId + "");
 
-                //Creates a new thread to get each field from domain
-                for (int i = 0; i < 5; i++) {
-                    final int j = i;
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                results[j] = httpGet(urls[j]);
-                            } catch (Exception ex){
-                                results[j] = ex.getMessage();
-                            }
-                            latch.countDown();
-                        }
-                    }).start();
-                }
+                    Date date = new Date(result.second.revisionDate);
+                    SimpleDateFormat df2 = new SimpleDateFormat("MM/dd/yy");
+                    String dateText = df2.format(date);
+                    System.out.println(dateText);
+                    info[3].setText(dateText);
 
-
-                try {
-                    latch.await();
-                } catch (Exception ex){
-
-                }
-                for(int i = 0; i < 5; i++){
-                    info[i].setText(results[i]);
+                    info[4].setText(result.second.summonerLevel + "");
                 }
             }
         });

@@ -13,21 +13,21 @@
 
     <TextView
         android:textColor="#cc6600"
-        android:text="Business Card"
+        android:text="Summoner Info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:textSize="40dp"/>
         <TextView
             style="@style/info_header"
-            android:text="Name"/>
+            android:text="ID"/>
         <TextView
             style="@style/info"
             android:id="@+id/name"/>
 
     <TextView
         style="@style/info_header"
-        android:text="Phone"/>
+        android:text="Name"/>
     <TextView
         style="@style/info"
 
@@ -35,20 +35,20 @@
 
     <TextView
         style="@style/info_header"
-        android:text="E-mail"/>
+        android:text="Profile Icon ID"/>
     <TextView
         style="@style/info"
         android:id="@+id/e_mail"/>
 
     <TextView
         style="@style/info_header"
-        android:text="LinkedIn"/>
+        android:text="Revision Date"/>
     <TextView
         style="@style/info"
         android:id="@+id/linkedin"/>
     <TextView
         style="@style/info_header"
-        android:text="GitHub"/>
+        android:text="Summoner Level"/>
     <TextView
         style="@style/info"
         android:id="@+id/github"/>

@@ -12,6 +12,7 @@ public class SummonerDto {
     public final long revisionDate;
     public final long summonerLevel;
 
+    //Makes a SummonerDto using primitives
     public SummonerDto(long id, String name, int profileIconId, long revisionDate, long summonerLevel){
         this.id = id;
         this.name = name;
@@ -20,6 +21,7 @@ public class SummonerDto {
         this.summonerLevel = summonerLevel;
     }
 
+    // Makes a SummonerDto given a JSON object
     public SummonerDto(JSONObject data) {
 
         // Parsing id from Json

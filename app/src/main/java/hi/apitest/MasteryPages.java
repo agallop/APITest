@@ -10,32 +10,16 @@ import java.util.TreeSet;
 /**
  * Created by Anthony on 4/30/2016.
  */
-public class MasteryPages {
+public class MasteryPages extends LeagueData{
     final Set<MasteryPage> pages;
     final long summonerId;
 
     public MasteryPages(JSONObject data) {
 
         //Getting Mastert Pages from data
-        TreeSet<MasteryPage> pages = new TreeSet<MasteryPage>();
-        try {
-            JSONArray dataArray = data.getJSONArray("pages");
-            int size = dataArray.length();
-            for (int i = 0; i < size; i++) {
-                pages.add(new MasteryPage(dataArray.getJSONObject(i)));
-            }
-        } catch (Exception ex) {
-        } finally {
-            this.pages = pages;
-        }
+        pages = MasteryPage.getPages(data);
 
-        long summonerId = 0;
-        try {
-            summonerId = data.getLong("summonerId");
-        } catch (Exception ex) {
-        } finally {
-            this.summonerId = summonerId;
-        }
+        summonerId = getLong(data, "summonerId");
 
     }
 

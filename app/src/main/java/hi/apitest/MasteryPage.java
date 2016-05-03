@@ -6,61 +6,50 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by Anthony on 4/30/2016.
  */
-public class MasteryPage {
+public class MasteryPage extends LeagueData{
     public final boolean current;
     public final long id;
     public final List<Mastery> masteries;
     public final String name;
 
+    /* Returns a Set of MasteryPage objects given a JSONObject */
+    public static Set<MasteryPage> getPages(JSONObject data){
+        TreeSet<MasteryPage> pages = new TreeSet<MasteryPage>();
+        try {
+            JSONArray dataArray = data.getJSONArray("pages");
+            int size = dataArray.length();
+            for (int i = 0; i < size; i++) {
+                pages.add(new MasteryPage(dataArray.getJSONObject(i)));
+            }
+        } catch (Exception ex) {
+        } finally {
+            return pages;
+        }
+    }
+
     public MasteryPage(JSONObject data){
 
         //Getting current from data
-        boolean current = false;
-        try{
-            current = data.getBoolean("current");
-        } catch (Exception ex){
-        } finally {
-            this.current = current;
-        }
+        current = getBoolean(data, "current");
 
-        //Getting current from data
-        long id = 0;
-        try{
-            id = data.getLong("id");
-        } catch (Exception ex){
-        } finally {
-            this.id = id;
-        }
+        //Getting id from data
+        id = getLong(data, "id");
 
-        //Getting current from data
-        List<Mastery> masteries = new ArrayList<Mastery>() {
-        };
-        try{
-            JSONArray dataArray = data.getJSONArray("masteries");
-            int size = dataArray.length();
-            for(int i = 0; i < size; i++){
-                masteries.add(new Mastery(dataArray.getJSONObject(i)));
-            }
-        } catch (Exception ex){
-        } finally {
-            this.masteries = masteries;
-        }
+        //Getting masteries from data
+        masteries = Mastery.getMasteries(data);
 
-        //Getting current from data
-        String name = "";
-        try{
-            name = data.getString("name");
-        } catch (Exception ex){
-        } finally {
-            this.name = name;
-        }
+        //Getting name from data
+        name = getString(data, "name");
 
     }
 
+    /* iterator */
     public Iterator<Mastery> iterator(){
         return masteries.iterator();
     }

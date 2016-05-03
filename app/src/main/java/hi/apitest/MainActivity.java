@@ -19,7 +19,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        RiotAPI.KEY = getString(R.string.riot_api_key);
+        /* Setting the key for API calls.
+         * NOTE: xml containing resource not on GitHub
+         */
+        RiotAPI.setKey(getString(R.string.riot_api_key));
+
+
         info[0] = (TextView) findViewById(R.id.name);
         info[1] = (TextView) findViewById(R.id.phone);
         info[2] = (TextView) findViewById(R.id.e_mail);
@@ -46,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
                     String dateText = df2.format(date);
                     System.out.println(dateText);
                     info[3].setText(dateText);
-
                     info[4].setText(result.summonerLevel + "");
                 }
             }

@@ -1,8 +1,6 @@
 package hi.apitest;
 
-import android.content.res.Resources;
 import android.util.Log;
-import android.util.Pair;
 
 import org.json.JSONObject;
 
@@ -12,11 +10,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.IllegalFormatCodePointException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
@@ -35,7 +30,7 @@ public class RiotAPI {
         KEY = key;
     }
 
-    public static TreeMap<String, SummonerDto> getSummonerByName(String region, final List<String> summonerNames) {
+    public static TreeMap<String, Summoner> getSummonerByName(String region, final List<String> summonerNames) {
 
         //Building string for API call
         StringBuilder builder = new StringBuilder();
@@ -58,13 +53,13 @@ public class RiotAPI {
             public void run() {
                 while (true) {
                     try {
-                        TreeMap<String, SummonerDto> result = new TreeMap<String, SummonerDto>();
+                        TreeMap<String, Summoner> result = new TreeMap<String, Summoner>();
                         // Pasrsing Json into Pair
                         JSONObject jsonResult = new JSONObject(httpGet(query));
                         Iterator<String> i = summonerNames.iterator();
                         while(i.hasNext()){
                             String name = i.next();
-                            result.put(name, new SummonerDto(jsonResult.getJSONObject(name)));
+                            result.put(name, new Summoner(jsonResult.getJSONObject(name)));
                         }
                         resultSemaphore.acquire();
                         callResult = result;
@@ -76,11 +71,11 @@ public class RiotAPI {
                 latch.countDown();
             }
         }).start();
-        TreeMap<String, SummonerDto> result;
+        TreeMap<String, Summoner> result;
         while (true) {
             try {
                 latch.await();
-                result = (TreeMap<String, SummonerDto>) callResult;
+                result = (TreeMap<String, Summoner>) callResult;
                 break;
             } catch (Exception ex) {
 
@@ -90,7 +85,7 @@ public class RiotAPI {
         return result;
     }
 
-    public static TreeMap<String, MasteryPagesDto> getMasteries(final List<String> summonerIds, String region) {
+    public static TreeMap<String, MasteryPages> getMasteries(final List<String> summonerIds, String region) {
         if(summonerIds == null)
             throw new IllegalArgumentException();
         if(summonerIds.size() == 0)
@@ -118,13 +113,13 @@ public class RiotAPI {
                 while (true) {
                     try {
                         // Pasrsing Json into Pair
-                        TreeMap<String, MasteryPagesDto> result = new TreeMap<String, MasteryPagesDto>();
+                        TreeMap<String, MasteryPages> result = new TreeMap<String, MasteryPages>();
                         JSONObject jsonResult = new JSONObject(httpGet(query));
                         Iterator<String> i = summonerIds.iterator();
                         while(i.hasNext()) {
                             String id = i.next();
                             JSONObject masteryPagesDto = jsonResult.getJSONObject(id);
-                            result.put(id, new MasteryPagesDto(masteryPagesDto));
+                            result.put(id, new MasteryPages(masteryPagesDto));
                         }
                         resultSemaphore.acquire();
                         callResult = result;
@@ -136,11 +131,11 @@ public class RiotAPI {
                 latch.countDown();
             }
         }).start();
-        TreeMap<String, MasteryPagesDto> result;
+        TreeMap<String, MasteryPages> result;
         while (true) {
             try {
                 latch.await();
-                result = (TreeMap<String, MasteryPagesDto>) callResult;
+                result = (TreeMap<String, MasteryPages>) callResult;
                 break;
             } catch (Exception ex) {
 

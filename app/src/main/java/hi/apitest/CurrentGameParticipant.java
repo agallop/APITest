@@ -1,7 +1,9 @@
 package hi.apitest;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,6 +21,21 @@ public class CurrentGameParticipant extends LeagueData{
     public final long summonerId;
     public final String summonerName;
     public final long teamId;
+
+    public static List<CurrentGameParticipant> getParticipants(JSONObject data){
+        List<CurrentGameParticipant> participants = new ArrayList<CurrentGameParticipant>();
+        try{
+            JSONArray dataArray = data.getJSONArray("participants");
+            int size = dataArray.length();
+            for(int i = 0; i < size; i++){
+                participants.add(new CurrentGameParticipant(dataArray.getJSONObject(i)));
+            }
+        } catch (Exception ex){
+        } finally {
+            return participants;
+        }
+    }
+
 
     public CurrentGameParticipant(JSONObject data){
         //Getting members from data

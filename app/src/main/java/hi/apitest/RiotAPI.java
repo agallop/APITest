@@ -114,7 +114,8 @@ public class RiotAPI {
                     try {
                         // Pasrsing Json into Pair
                         TreeMap<String, MasteryPages> result = new TreeMap<String, MasteryPages>();
-                        JSONObject jsonResult = new JSONObject(httpGet(query));
+         
+                        JSONObject jsonResult = new JSONObject(httpGet(query).se);
                         Iterator<String> i = summonerIds.iterator();
                         while(i.hasNext()) {
                             String id = i.next();
@@ -150,23 +151,21 @@ public class RiotAPI {
 
 
 
-    public static String httpGet(String urlStr) throws IOException {
+    public static Pair<Integer, String> httpGet(String urlStr) throws IOException {
         Log.d("MAIN", "httpstart");
         URL url = new URL(urlStr);
         URLConnection con = url.openConnection();
         HttpURLConnection conn = (HttpURLConnection) con;
-        //conn.setConnectTimeout(10000);
-        //conn.setReadTimeout(10000);
-        // conn.setRequestMethod("GET");
 
         if(conn.getResponseCode() == -1){
             return "failed to connect";
         }
 
 
-        if (conn.getResponseCode() != 200) {
+        int responseCode = conn.getResponseCode();
+        if (responseCode) {
             Log.d("MAIN", "response != 200");
-            return conn.getResponseMessage();
+            return new Pair<String, String>(responseCode , conn.getResponseMessage());
         }
 
         // Buffer the result into a string
@@ -181,7 +180,7 @@ public class RiotAPI {
         rd.close();
         Log.d("MAIN", "finish append");
         conn.disconnect();
-        return sb.toString();
+        return new Pair<Integer, String>(responseCode, sb.toString());
     }
 
 }

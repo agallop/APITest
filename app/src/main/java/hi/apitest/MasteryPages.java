@@ -14,6 +14,8 @@ public class MasteryPages extends LeagueData{
     final Set<MasteryPage> pages;
     final long summonerId;
 
+
+
     public MasteryPages(JSONObject data) {
 
         //Getting Mastert Pages from data

@@ -2,6 +2,7 @@ package hi.apitest;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,5 +35,25 @@ public class CurrentGameInfo extends LeagueData{
         observers = new Observer(data);
         participants = CurrentGameParticipant.getParticipants(data);
         platformId = getString(data, "platformId");
+    }
+
+    public List<CurrentGameParticipant> getTeam(long teamId){
+        ArrayList<CurrentGameParticipant> team = new ArrayList<CurrentGameParticipant>();
+        for(CurrentGameParticipant participant : participants){
+            if(participant.teamId == teamId){
+                team.add(participant);
+            }
+        }
+        return team;
+    }
+
+    public List<CurrentGameParticipant> getEnemyTeam(long teamId){
+        ArrayList<CurrentGameParticipant> team = new ArrayList<CurrentGameParticipant>();
+        for(CurrentGameParticipant participant : participants){
+            if(participant.teamId != teamId){
+                team.add(participant);
+            }
+        }
+        return team;
     }
 }

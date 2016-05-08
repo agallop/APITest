@@ -39,19 +39,29 @@ public class MainActivity extends AppCompatActivity {
                 names.add("ajmgallop");
                 names.add("raichinny");
                 TreeMap<String, Summoner> results = RiotAPI.getSummonerByName("NA", new ArrayList<String>(names));
-                Summoner result = results.get("raichinny");
-                if (result != null) {
-                    StringBuilder builder = new StringBuilder();
-                    info[0].setText(result.id + "");
-                    info[1].setText(result.name);
-                    info[2].setText(result.profileIconId + "");
+                if(results != null) {
+                    Summoner result = results.get("raichinny");
+                    if (result != null) {
+                        StringBuilder builder = new StringBuilder();
+                        info[0].setText(result.id + "");
+                        info[1].setText(result.name);
+                        info[2].setText(result.profileIconId + "");
 
-                    Date date = new Date(result.revisionDate);
-                    SimpleDateFormat df2 = new SimpleDateFormat("MM/dd/yy");
-                    String dateText = df2.format(date);
-                    System.out.println(dateText);
-                    info[3].setText(dateText);
-                    info[4].setText(result.summonerLevel + "");
+                        Date date = new Date(result.revisionDate);
+                        SimpleDateFormat df2 = new SimpleDateFormat("MM/dd/yy");
+                        String dateText = df2.format(date);
+                        System.out.println(dateText);
+                        info[3].setText(dateText);
+                        info[4].setText(result.summonerLevel + "");
+                    }
+                }
+                else{
+                    info[0].setText("Error");
+                    info[1].setText("Error");
+                    info[2].setText("Error");
+                    info[3].setText("Error");
+                    info[4].setText("Error");
+
                 }
             }
         });

@@ -1,6 +1,7 @@
 package hi.apitest;
 
 import android.util.Log;
+import android.util.Pair;
 
 import org.json.JSONObject;
 
@@ -53,16 +54,22 @@ public class RiotAPI {
             public void run() {
                 while (true) {
                     try {
-                        TreeMap<String, Summoner> result = new TreeMap<String, Summoner>();
+                        Pair<Integer, String> response = httpGet(query);
                         // Pasrsing Json into Pair
-                        JSONObject jsonResult = new JSONObject(httpGet(query));
-                        Iterator<String> i = summonerNames.iterator();
-                        while(i.hasNext()){
-                            String name = i.next();
-                            result.put(name, new Summoner(jsonResult.getJSONObject(name)));
+                        if(response.first == 200) {
+                            TreeMap<String, Summoner> result = new TreeMap<String, Summoner>();
+                            // Pasrsing Json into Pair
+                            JSONObject jsonResult = new JSONObject(response.second);
+                            Iterator<String> i = summonerNames.iterator();
+                            while (i.hasNext()) {
+                                String name = i.next();
+                                result.put(name, new Summoner(jsonResult.getJSONObject(name)));
+                            }
+                            resultSemaphore.acquire();
+                            callResult = result;
+                        } else {
+                            callResult = null;
                         }
-                        resultSemaphore.acquire();
-                        callResult = result;
                         break;
                     } catch (Exception ex) {
 
@@ -112,18 +119,24 @@ public class RiotAPI {
             public void run() {
                 while (true) {
                     try {
+                        Pair<Integer, String> response = httpGet(query);
                         // Pasrsing Json into Pair
-                        TreeMap<String, MasteryPages> result = new TreeMap<String, MasteryPages>();
-         
-                        JSONObject jsonResult = new JSONObject(httpGet(query).se);
-                        Iterator<String> i = summonerIds.iterator();
-                        while(i.hasNext()) {
-                            String id = i.next();
-                            JSONObject masteryPagesDto = jsonResult.getJSONObject(id);
-                            result.put(id, new MasteryPages(masteryPagesDto));
+                        if(response.first == 200) {
+                            TreeMap<String, MasteryPages> result = new TreeMap<String, MasteryPages>();
+
+                            JSONObject jsonResult = new JSONObject(response.second);
+                            Iterator<String> i = summonerIds.iterator();
+                            while (i.hasNext()) {
+                                String id = i.next();
+                                JSONObject masteryPagesDto = jsonResult.getJSONObject(id);
+                                result.put(id, new MasteryPages(masteryPagesDto));
+                            }
+
+                            resultSemaphore.acquire();
+                            callResult = result;
+                        }else {
+                            callResult = null;
                         }
-                        resultSemaphore.acquire();
-                        callResult = result;
                         break;
                     } catch (Exception ex) {
 
@@ -147,7 +160,54 @@ public class RiotAPI {
 
     }
 
+    public CurrentGameInfo getCurrentGame(long summonerId, String region){
 
+        StringBuilder builder = new StringBuilder();
+        builder.append("https://na.api.pvp.net/observer-mode/rest/consumer/getSpectatorGameInfo/");
+        builder.append(region);
+        builder.append("/");
+        builder.append(summonerId);
+        builder.append("?api_key=");
+        builder.append(KEY);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final String query = builder.toString();
+        Log.d("API", "Starting Thread");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Pair<Integer, String> response = httpGet(query);
+                        // Pasrsing Json into Pair
+                        if(response.first == 200) {
+                            JSONObject jsonResult = new JSONObject(response.second);
+                            resultSemaphore.acquire();
+                            callResult = new CurrentGameParticipant(jsonResult);
+                        }else {
+                            callResult = null;
+                        }
+                        break;
+                    } catch (Exception ex) {
+
+                    }
+                }
+                latch.countDown();
+            }
+        }).start();
+        CurrentGameInfo result;
+        while (true) {
+            try {
+                latch.await();
+                result = (CurrentGameInfo) callResult;
+                break;
+            } catch (Exception ex) {
+
+            }
+        }
+        resultSemaphore.release();
+        return result;
+    }
 
 
 
@@ -157,15 +217,11 @@ public class RiotAPI {
         URLConnection con = url.openConnection();
         HttpURLConnection conn = (HttpURLConnection) con;
 
-        if(conn.getResponseCode() == -1){
-            return "failed to connect";
-        }
-
-
+        //Error
         int responseCode = conn.getResponseCode();
-        if (responseCode) {
+        if (responseCode != 200) {
             Log.d("MAIN", "response != 200");
-            return new Pair<String, String>(responseCode , conn.getResponseMessage());
+            return new Pair<Integer, String>(responseCode , conn.getResponseMessage());
         }
 
         // Buffer the result into a string

@@ -1,8 +1,10 @@
 package hi.apitest;
 
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.util.Pair;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -13,6 +15,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
@@ -24,6 +27,8 @@ public class RiotAPI {
     public static String KEY;
     private static final Semaphore resultSemaphore = new Semaphore(1);
     private static Object callResult;
+    private static Map<Long, Drawable> summonerCache;
+    private static Map<Long, Drawable> championCache;
 
     /* Sets the API key
     * Required before calling any other method */
@@ -200,6 +205,51 @@ public class RiotAPI {
             try {
                 latch.await();
                 result = (CurrentGameInfo) callResult;
+                break;
+            } catch (Exception ex) {
+
+            }
+        }
+        resultSemaphore.release();
+        return result;
+    }
+
+    public static String getCurrentVersion(){
+
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("https://global.api.pvp.net/api/lol/static-data/na/v1.2/versions?api_key=");
+        builder.append(KEY);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final String query = builder.toString();
+        Log.d("API", "Starting Thread");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Pair<Integer, String> response = httpGet(query);
+                        if(response.first == 200) {
+                            JSONArray jsonResult = new JSONArray(response.second);
+                            resultSemaphore.acquire();
+                            callResult = jsonResult.get(0);
+                        }else {
+                            callResult = null;
+                        }
+                        break;
+                    } catch (Exception ex) {
+
+                    }
+                }
+                latch.countDown();
+            }
+        }).start();
+        String result;
+        while (true) {
+            try {
+                latch.await();
+                result = (String) callResult;
                 break;
             } catch (Exception ex) {
 

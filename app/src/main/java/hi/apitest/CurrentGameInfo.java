@@ -32,7 +32,7 @@ public class CurrentGameInfo extends LeagueData{
         gameStartTime = getLong(data, "gameStartTime");
         gameType = getString(data, "gameType");
         mapId = getLong(data, "mapId");
-        observers = new Observer(data);
+        observers = Observer.getObserver(data);
         participants = CurrentGameParticipant.getParticipants(data);
         platformId = getString(data, "platformId");
     }

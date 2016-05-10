@@ -1,5 +1,6 @@
 package hi.apitest;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -7,6 +8,18 @@ import org.json.JSONObject;
  */
 public class Observer extends LeagueData{
     public String encryptionKey;
+
+    public static Observer getObserver(JSONObject data){
+        Observer observer = null;
+        try{
+            JSONObject object = data.getJSONObject("observer");
+            observer = new Observer(object);
+
+        } catch (Exception ex){
+        } finally {
+            return observer;
+        }
+    }
 
     public Observer (JSONObject data){
         //Get encryptionKey from data

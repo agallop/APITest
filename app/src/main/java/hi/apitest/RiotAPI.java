@@ -31,11 +31,18 @@ import java.util.concurrent.Semaphore;
  * Created by Anthony on 4/26/2016.
  */
 public class RiotAPI {
-    public static String KEY;
+
+    private static String KEY;
     private static final Semaphore resultSemaphore = new Semaphore(1);
     private static Object callResult;
-    private static Map<Long, Bitmap> summonersCache = new TreeMap<Long, Bitmap>();
-    private static Map<Long, Bitmap> championCache = new TreeMap<Long, Bitmap>();
+
+    //Caching results from http connections
+    private static Map<Long, Bitmap> summonersImageCache = new TreeMap<Long, Bitmap>();
+    private static Map<Long, Bitmap> championImageCache = new TreeMap<Long, Bitmap>();
+    private static Map<Long, Champion> championCache = new TreeMap<Long, Champion>();
+    private static Map<Long, SummonerSpell> summonersCache = new TreeMap<Long, SummonerSpell>();
+
+    //Current version for lol static data
     private static String currentVersion;
 
     /* Sets the API key
@@ -60,49 +67,24 @@ public class RiotAPI {
         builder.append(summonerNames.get(i));
         builder.append("?api_key=");
         builder.append(KEY);
-        final CountDownLatch latch = new CountDownLatch(1);
+
         final String query = builder.toString();
-        Log.d("API", "Starting Thread");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Pair<Integer, String> response = httpGet(query);
-                        // Pasrsing Json into Pair
-                        if(response.first == 200) {
-                            TreeMap<String, Summoner> result = new TreeMap<String, Summoner>();
-                            // Pasrsing Json into Pair
-                            JSONObject jsonResult = new JSONObject(response.second);
-                            Iterator<String> i = summonerNames.iterator();
-                            while (i.hasNext()) {
-                                String name = i.next();
-                                result.put(name, new Summoner(jsonResult.getJSONObject(name)));
-                            }
-                            resultSemaphore.acquire();
-                            callResult = result;
-                        } else {
-                            callResult = null;
-                        }
-                        break;
-                    } catch (Exception ex) {
 
-                    }
-                }
-                latch.countDown();
-            }
-        }).start();
-        TreeMap<String, Summoner> result;
-        while (true) {
+        TreeMap<String, Summoner> result = new TreeMap<String, Summoner>();
+
+        // Pasrsing Json Map
+        JSONObject jsonResult = getJsonObject(query);
+        Iterator<String> iterator = summonerNames.iterator();
+        while (iterator.hasNext()) {
             try {
-                latch.await();
-                result = (TreeMap<String, Summoner>) callResult;
-                break;
-            } catch (Exception ex) {
-
+                String name = iterator.next();
+                result.put(name, new Summoner(jsonResult.getJSONObject(name)));
             }
+            catch (Exception ex){}
         }
-        resultSemaphore.release();
+
+
+
         return result;
     }
 
@@ -111,7 +93,7 @@ public class RiotAPI {
             throw new IllegalArgumentException();
         if(summonerIds.size() == 0)
             throw new IllegalArgumentException();
-
+        //Building string for query
         StringBuilder builder = new StringBuilder();
         builder.append("https://na.api.pvp.net/api/lol/");
         builder.append(region);
@@ -125,53 +107,22 @@ public class RiotAPI {
         builder.append("/masteries?api_key=");
         builder.append(KEY);
 
-        final CountDownLatch latch = new CountDownLatch(1);
         final String query = builder.toString();
-        Log.d("API", "Starting Thread");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Pair<Integer, String> response = httpGet(query);
-                        // Pasrsing Json into Pair
-                        if(response.first == 200) {
-                            TreeMap<String, MasteryPages> result = new TreeMap<String, MasteryPages>();
 
-                            JSONObject jsonResult = new JSONObject(response.second);
-                            Iterator<String> i = summonerIds.iterator();
-                            while (i.hasNext()) {
-                                String id = i.next();
-                                JSONObject masteryPagesDto = jsonResult.getJSONObject(id);
-                                result.put(id, new MasteryPages(masteryPagesDto));
-                            }
+        TreeMap<String, MasteryPages> result = new TreeMap<String, MasteryPages>();
 
-                            resultSemaphore.acquire();
-                            callResult = result;
-                        }else {
-                            callResult = null;
-                        }
-                        break;
-                    } catch (Exception ex) {
-
-                    }
-                }
-                latch.countDown();
-            }
-        }).start();
-        TreeMap<String, MasteryPages> result;
-        while (true) {
+        //Parsing Json into Map
+        JSONObject jsonResult = getJsonObject(query);
+        Iterator<String> iterator = summonerIds.iterator();
+        while (iterator.hasNext()) {
+            String id = iterator.next();
             try {
-                latch.await();
-                result = (TreeMap<String, MasteryPages>) callResult;
-                break;
-            } catch (Exception ex) {
-
+                JSONObject masteryPagesDto = jsonResult.getJSONObject(id);
+                result.put(id, new MasteryPages(masteryPagesDto));
             }
+            catch (Exception ex){}
         }
-        resultSemaphore.release();
         return result;
-
     }
 
     public CurrentGameInfo getCurrentGame(long summonerId, String region){
@@ -184,43 +135,8 @@ public class RiotAPI {
         builder.append("?api_key=");
         builder.append(KEY);
 
-        final CountDownLatch latch = new CountDownLatch(1);
         final String query = builder.toString();
-        Log.d("API", "Starting Thread getCurrentGame");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Pair<Integer, String> response = httpGet(query);
-                        // Pasrsing Json into Pair
-                        if(response.first == 200) {
-                            JSONObject jsonResult = new JSONObject(response.second);
-                            resultSemaphore.acquire();
-                            callResult = new CurrentGameParticipant(jsonResult);
-                        }else {
-                            callResult = null;
-                        }
-                        break;
-                    } catch (Exception ex) {
-
-                    }
-                }
-                latch.countDown();
-            }
-        }).start();
-        CurrentGameInfo result;
-        while (true) {
-            try {
-                latch.await();
-                result = (CurrentGameInfo) callResult;
-                break;
-            } catch (Exception ex) {
-
-            }
-        }
-        resultSemaphore.release();
-        return result;
+        return new CurrentGameInfo(getJsonObject(query));
     }
 
     public static String getCurrentVersion(){
@@ -299,7 +215,7 @@ public class RiotAPI {
     }
 
     public static Bitmap getSummonerImage(final Long id){
-        if(!summonersCache.containsKey(id)){
+        if(!summonersImageCache.containsKey(id)){
             SummonerSpell spell = getSummonerSpell(id);
             StringBuilder builder = new StringBuilder();
             builder.append("http://ddragon.leagueoflegends.com/cdn/");
@@ -312,9 +228,9 @@ public class RiotAPI {
                 @Override
                 public void run() {
                     try {
-                        summonersCache.put(id, bitmapFromUrl(query));
+                        summonersImageCache.put(id, bitmapFromUrl(query));
                     } catch (Exception ex){
-                        Log.d("getSummonerImage", ex.getLocalizedMessage());
+                        Log.d("getSummonerImage", ex.getMessage());
                     }
                     latch.countDown();
                 }
@@ -325,11 +241,11 @@ public class RiotAPI {
 
             }
         }
-        return summonersCache.get(id);
+        return summonersImageCache.get(id);
     }
 
     public static Bitmap getChampionImage(final Long id){
-        if(!championCache.containsKey(id)){
+        if(!championImageCache.containsKey(id)){
             Champion champion = getChampion(id);
             StringBuilder builder = new StringBuilder();
             builder.append("http://ddragon.leagueoflegends.com/cdn/");
@@ -342,10 +258,10 @@ public class RiotAPI {
                 @Override
                 public void run() {
                     try{
-                    championCache.put(id, bitmapFromUrl(query));
-                        Log.d("getChampionImage", "champ" + id + "added");
+                    championImageCache.put(id, bitmapFromUrl(query));
+                        Log.d("getChampionImage", "champ" + id + " added tp cache");
                     } catch (Exception ex){
-                        Log.d("getSummonerImage", ex.getLocalizedMessage());
+                        Log.d("getSummonerImage", ex.getMessage());
                     }
                     latch.countDown();
                 }
@@ -356,64 +272,44 @@ public class RiotAPI {
 
             }
         }
-        return championCache.get(id);
+        return championImageCache.get(id);
     }
 
     private static SummonerSpell getSummonerSpell(Long id){
+        if(summonersCache.containsKey(id)){
+            return summonersCache.get(id);
+        }
         StringBuilder builder = new StringBuilder();
         builder.append("https://global.api.pvp.net/api/lol/static-data/na/v1.2/summoner-spell/");
         builder.append(id);
         builder.append("?spellData=all&api_key=");
         builder.append(KEY);
 
-        final CountDownLatch latch = new CountDownLatch(1);
         final String query = builder.toString();
-        Log.d("API", "Starting getSummonerSpell");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Pair<Integer, String> response = httpGet(query);
-                        if(response.first == 200) {
-                            JSONObject jsonResult = new JSONObject(response.second);
-                            resultSemaphore.acquire();
-                            callResult = new SummonerSpell(jsonResult);
-                        }else {
-                            callResult = null;
-                        }
-                        break;
-                    } catch (Exception ex) {
-
-                    }
-                }
-                latch.countDown();
-            }
-        }).start();
-        SummonerSpell result;
-        while (true) {
-            try {
-                latch.await();
-                result = (SummonerSpell) callResult;
-                break;
-            } catch (Exception ex) {
-
-            }
-        }
-        resultSemaphore.release();
-        return result;
+        summonersCache.put(id, new SummonerSpell(getJsonObject(query)));
+        return summonersCache.get(id);
     }
 
     private static Champion getChampion(Long id){
+        if(championCache.containsKey(id)){
+            return championCache.get(id);
+        }
         StringBuilder builder = new StringBuilder();
         builder.append("https://global.api.pvp.net/api/lol/static-data/na/v1.2/champion/");
         builder.append(id);
         builder.append("?champData=all&api_key=");
         builder.append(KEY);
 
-        final CountDownLatch latch = new CountDownLatch(1);
         final String query = builder.toString();
-        Log.d("API", "Starting getSummonerSpell");
+        championCache.put(id, new Champion(getJsonObject(query)));
+        return championCache.get(id);
+    }
+
+    //Returns a JSONObject given from a connection to query
+    private static JSONObject getJsonObject(final String query){
+        //To wait for result from connection
+        final CountDownLatch latch = new CountDownLatch(1);
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -421,39 +317,43 @@ public class RiotAPI {
                     try {
                         Pair<Integer, String> response = httpGet(query);
                         if(response.first == 200) {
-                            JSONObject jsonResult = new JSONObject(response.second);
+                            //Gain control of a global Object variable
                             resultSemaphore.acquire();
-                            Log.d("getChampion", "got champion");
-                            callResult = new Champion(jsonResult);
+                            callResult = new JSONObject(response.second);
                         }else {
+                            resultSemaphore.acquire();
                             callResult = null;
                         }
+                        Log.d("getJsonObject", query + ": " + response.first);
                         break;
                     } catch (Exception ex) {
-
+                        Log.d("getJsonObject", ex.getMessage());
                     }
                 }
                 latch.countDown();
             }
         }).start();
-        Champion result;
+
+        //Waits for result from thread
+        JSONObject result;
         while (true) {
             try {
                 latch.await();
-                result = (Champion) callResult;
+                result = (JSONObject) callResult;
                 break;
             } catch (Exception ex) {
-
+                Log.d("getJsonObject", ex.getMessage());
             }
         }
+
+        //Release control of global Object variable
         resultSemaphore.release();
         return result;
     }
 
-
+    //Gets a bitmap given the URL
     private static Bitmap bitmapFromUrl(String url) throws IOException {
         Bitmap x;
-        Log.d("RiotAPI", "getBitmapFromURL: " + url);
 
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.connect();

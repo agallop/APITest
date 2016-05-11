@@ -7,8 +7,10 @@ import org.json.JSONObject;
  */
 public class Champion extends LeagueData {
     public final Image image;
+    public final String name;
 
     public Champion(JSONObject data){
         image = Image.getImage(data);
+        name = getString(data, "name");
     }
 }

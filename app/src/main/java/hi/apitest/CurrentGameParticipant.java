@@ -26,6 +26,7 @@ public class CurrentGameParticipant extends LeagueData{
     public final String summonerName;
     public final long teamId;
 
+    // Returns a list of CurrentGameParticipants given a JsonObject
     public static List<CurrentGameParticipant> getParticipants(JSONObject data){
         List<CurrentGameParticipant> participants = new ArrayList<CurrentGameParticipant>();
         try{
@@ -67,4 +68,14 @@ public class CurrentGameParticipant extends LeagueData{
         return new Pair<SummonerSpell, SummonerSpell>(
                 RiotAPI.getSummonerSpell(spell1Id), RiotAPI.getSummonerSpell(spell2Id));
     }
+    // Determines if the particiapnt has the mastery indicaded by
+    // masteryId equiped
+    public boolean hasMastery(long masteryId){
+      for(Mastery mastery : masteries){
+        if(mastery.id == masteryId)
+          return true;
+      }
+      return false;
+    }
+
 }

@@ -56,4 +56,13 @@ public class CurrentGameInfo extends LeagueData{
         }
         return team;
     }
+
+    public long getTeamId(long summonerId){
+      for(CurrentGameParticipant participant : participants){
+        if(participant.summonerId = summonerId)
+          return participant.teamId;
+      }
+
+      return 0;
+    }
 }

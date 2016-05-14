@@ -1,5 +1,9 @@
 package hi.apitest;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.util.Pair;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -51,4 +55,16 @@ public class CurrentGameParticipant extends LeagueData{
         teamId = getLong(data, "teamId");
     }
 
+    public Bitmap getChampionImage(){
+        return RiotAPI.getChampionImage(championId);
+    }
+
+    public Champion getChampion(){
+        return RiotAPI.getChampion(championId);
+    }
+
+    public Pair<SummonerSpell,SummonerSpell> getSpells(){
+        return new Pair<SummonerSpell, SummonerSpell>(
+                RiotAPI.getSummonerSpell(spell1Id), RiotAPI.getSummonerSpell(spell2Id));
+    }
 }

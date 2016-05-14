@@ -216,6 +216,7 @@ public class RiotAPI {
 
     public static Bitmap getSummonerImage(final Long id){
         if(!summonersImageCache.containsKey(id)){
+            // Gets the
             SummonerSpell spell = getSummonerSpell(id);
             StringBuilder builder = new StringBuilder();
             builder.append("http://ddragon.leagueoflegends.com/cdn/");
@@ -275,7 +276,7 @@ public class RiotAPI {
         return championImageCache.get(id);
     }
 
-    private static SummonerSpell getSummonerSpell(Long id){
+    public static SummonerSpell getSummonerSpell(Long id){
         if(summonersCache.containsKey(id)){
             return summonersCache.get(id);
         }
@@ -290,7 +291,7 @@ public class RiotAPI {
         return summonersCache.get(id);
     }
 
-    private static Champion getChampion(Long id){
+    public static Champion getChampion(Long id){
         if(championCache.containsKey(id)){
             return championCache.get(id);
         }

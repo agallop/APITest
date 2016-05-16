@@ -41,6 +41,7 @@ public class RiotAPI {
     private static Map<Long, Bitmap> championImageCache = new TreeMap<Long, Bitmap>();
     private static Map<Long, Champion> championCache = new TreeMap<Long, Champion>();
     private static Map<Long, SummonerSpell> summonersCache = new TreeMap<Long, SummonerSpell>();
+    private static Map<String, Summoner> summonerCache = new TreeMap<String, Summoner>();
 
     //Current version for lol static data
     private static String currentVersion;
@@ -52,38 +53,77 @@ public class RiotAPI {
         currentVersion = getCurrentVersion();
     }
 
+    // Gets simplified summonerName. Lowercase characters with no spaces
+    private static String toSimple(String string){
+        StringBuilder builder = new StringBuilder();
+        for(char c : string.toCharArray()){
+            char cur = Character.toLowerCase(c);
+            if(cur <= 'z' && cur >= 'a'){
+                builder.append(c);
+            }
+        }
+        return builder.toString();
+    }
     public static TreeMap<String, Summoner> getSummonerByName(String region, final List<String> summonerNames) {
 
+        //Holds the result of the call
+        TreeMap<String, Summoner> result = new TreeMap<String, Summoner>();
         //Building string for API call
         StringBuilder builder = new StringBuilder();
         builder.append("https://na.api.pvp.net/api/lol/");
         builder.append(region);
         builder.append("/v1.4/summoner/by-name/");
         int i;
+
+        //Used to determine if the request information is already cached
+        boolean cached = true;
+
+        //Adds each name to string, if it is not already cached
         for(i = 0; i < summonerNames.size() - 1; i++){
-            builder.append(summonerNames.get(i));
-            builder.append(",%20");
+            String simpleName = toSimple(summonerNames.get(i));
+            if(!summonerCache.containsKey(simpleName)) {
+                builder.append(simpleName);
+                builder.append(",%20");
+                cached = false;
+            } else {
+                result.put(summonerNames.get(i), summonerCache.get(simpleName));
+            }
         }
-        builder.append(summonerNames.get(i));
+
+        //Adds last name without trailing space
+        String simpleName = toSimple(summonerNames.get(i));
+        if(!summonerCache.containsKey(simpleName)) {
+            builder.append(simpleName);
+            cached = false;
+        } else {
+            result.put(summonerNames.get(i), summonerCache.get(simpleName));
+        }
         builder.append("?api_key=");
         builder.append(KEY);
 
         final String query = builder.toString();
 
-        TreeMap<String, Summoner> result = new TreeMap<String, Summoner>();
+        // Makes API call if needed
+        if(!cached) {
+            // Pasrsing Json Map
+            JSONObject jsonResult = getJsonObject(query);
+            Iterator<String> iterator = summonerNames.iterator();
 
-        // Pasrsing Json Map
-        JSONObject jsonResult = getJsonObject(query);
-        Iterator<String> iterator = summonerNames.iterator();
-        while (iterator.hasNext()) {
-            try {
-                String name = iterator.next();
-                result.put(name, new Summoner(jsonResult.getJSONObject(name)));
+            //Adds and caches Summoner objects from API call
+            while (iterator.hasNext()) {
+                try {
+                    String name = toSimple(iterator.next());
+                    simpleName = toSimple(name);
+                    if(jsonResult.has(simpleName)) {
+                        summonerCache.put(simpleName, new Summoner(jsonResult.getJSONObject(simpleName)));
+                        result.put(name, summonerCache.get(simpleName));
+
+                    }
+                } catch (Exception ex) {
+
+                }
             }
-            catch (Exception ex){}
         }
-
-
 
         return result;
     }
